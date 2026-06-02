@@ -180,6 +180,9 @@ const warningCodeMap = {
   "27":"融雪注意報",
   "29":"レベル2土砂災害注意報", 
 
+   // --- 危険警報 ---
+   "43":"レベル4大雨危険警報",
+
   // --- 特別警報（30〜30番台） ---
   "32":"暴風雪特別警報", 
   "33":"レベル5大雨特別警報", 
@@ -2288,7 +2291,7 @@ function getWarningIcon(code, status){
   const c = String(code).padStart(2,"0");
   if(c === "91"){ return "🟧"; }
   if(c === "33"){ return "⬛"; }
-  if(["32","35","36","37","38","64"].includes(c)){ return "🟪"; }
+  if(["32","35","36","37","38","43","64"].includes(c)){ return "🟪"; }
   if(["03","04","05","06","07","08",].includes(c)){ return "🟥"; }
   return "🟨";
 }
