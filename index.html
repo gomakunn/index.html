@@ -4,16 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>気象警報・注意報コピーツール</title>
+
 <style>
 body{
   font-family:sans-serif;
   margin:15px;
   background:#f4f4f4;
 }
+
 h1{
   font-size:22px;
   text-align:center;
 }
+
 select, button{
   width:100%;
   font-size:16px;
@@ -21,6 +24,7 @@ select, button{
   margin-top:10px;
   box-sizing:border-box;
 }
+
 button{
   font-size:18px;
   border:none;
@@ -29,6 +33,7 @@ button{
   color:white;
   cursor:pointer;
 }
+
 #result{
   white-space:pre-wrap;
   background:white;
@@ -36,10 +41,11 @@ button{
   border-radius:8px;
   margin-top:15px;
   font-size:16px;
-  line-height:1.6;
+  line-height:1.7;
 }
 </style>
 </head>
+
 <body>
 
 <h1>気象警報・注意報コピーツール</h1>
@@ -94,132 +100,105 @@ button{
   <option>沖縄県</option>
 </select>
 
-<select id="hokkaidoRegion" style="display:none;">
-  <option value="all">北海道全体</option>
-  <option value="souya">宗谷地方</option>
-  <option value="kamikawa">上川地方</option>
-  <option value="rumoi">留萌地方</option>
-  <option value="ishikari">石狩地方</option>
-  <option value="sorachi">空知地方</option>
-  <option value="shiribeshi">後志地方</option>
-  <option value="abashiri">網走地方</option>
-  <option value="kushiro">釧路地方</option>
-  <option value="nemuro">根室地方</option>
-  <option value="tokachi">十勝地方</option>
-  <option value="iburi">胆振地方</option>
-  <option value="hidaka">日高地方</option>
-  <option value="oshima">渡島地方</option>
-  <option value="hiyama">檜山地方</option>
-</select>
+<div id="hokkaidoRegion" style="display:none; margin-top:10px;">
+  <select id="regionSelect">
+    <option value="">地方を選択（全域）</option>
+  </select>
+</div>
 
-<button onclick="createAndCopy()">📋通常＋コピー</button>
-<button onclick="createAndCopyGrouped()">📋まとめ＋コピー</button>
-<button onclick="createAndCopyByWarning()">📋注意報別＋コピー</button>
-<div id="result">ここに警報、注意報が表示されます</div>
+<button id="normalBtn">📋 通常＋コピー</button>
+<button id="summaryBtn">📋 まとめ＋コピー</button>
+<button id="warningBtn">📋 注意報別＋コピー</button>
 
-</body>
+<div id="result">ここに警報が表示されます</div>
 
 <script>
-const officeMap = {
-  "北海道":"札幌管区気象台",
-  "青森県":"青森地方気象台",
-  "岩手県":"盛岡地方気象台",
-  "宮城県":"仙台管区気象台",
-  "秋田県":"秋田地方気象台",
-  "山形県":"山形地方気象台",
-  "福島県":"福島地方気象台",
-  "茨城県":"水戸地方気象台",
-  "栃木県":"宇都宮地方気象台",
-  "群馬県":"前橋地方気象台",
-  "埼玉県":"熊谷地方気象台",
-  "千葉県":"銚子地方気象台",
-  "東京都":"気象庁",
-  "神奈川県":"横浜地方気象台",
-  "新潟県":"新潟地方気象台",
-  "富山県":"富山地方気象台",
-  "石川県":"金沢地方気象台",
-  "福井県":"福井地方気象台",
-  "山梨県":"甲府地方気象台",
-  "長野県":"長野地方気象台",
-  "岐阜県":"岐阜地方気象台",
-  "静岡県":"静岡地方気象台",
-  "愛知県":"名古屋地方気象台",
-  "三重県":"津地方気象台",
-  "滋賀県":"彦根地方気象台",
-  "京都府":"京都地方気象台",
-  "大阪府":"大阪管区気象台",
-  "兵庫県":"神戸地方気象台",
-  "奈良県":"奈良地方気象台",
-  "和歌山県":"和歌山地方気象台",
-  "鳥取県":"鳥取地方気象台",
-  "島根県":"松江地方気象台",
-  "岡山県":"岡山地方気象台",
-  "広島県":"広島地方気象台",
-  "山口県":"下関地方気象台",
-  "徳島県":"徳島地方気象台",
-  "香川県":"高松地方気象台",
-  "愛媛県":"松山地方気象台",
-  "高知県":"高知地方気象台",
-  "福岡県":"福岡管区気象台",
-  "佐賀県":"佐賀地方気象台",
-  "長崎県":"長崎地方気象台",
-  "熊本県":"熊本地方気象台",
-  "大分県":"大分地方気象台",
-  "宮崎県":"宮崎地方気象台",
-  "鹿児島県":"鹿児島地方気象台",
-  "沖縄県":"沖縄気象台"
+// =======================
+// マップデータ定義
+// =======================
+const subRegionMap = {
+  "北海道":[
+    ["011000","宗谷地方"],
+    ["012000","上川・留萌地方"],
+    ["013000","網走・北見・紋別地方"],
+    ["014100","根室地方"],
+    ["014030","釧路地方"],
+    ["014040","十勝地方"],
+    ["015000","胆振・日高地方"],
+    ["016000","石狩・空知・後志地方"],
+    ["017000","渡島・檜山地方"]
+  ],
+
+  "鹿児島県":[
+  ["460100","鹿児島県（本土）"],
+  ["460040","奄美地方"]
+],
+
+"沖縄県":[
+  ["471000","沖縄本島地方"],
+  ["472000","大東島地方"],
+  ["473000","宮古・八重山地方"]
+]
 };
 
-const prefCodeMap = {
-  "北海道":"01","青森県":"02","岩手県":"03","宮城県":"04","秋田県":"05",
-  "山形県":"06","福島県":"07","茨城県":"08","栃木県":"09","群馬県":"10",
-  "埼玉県":"11","千葉県":"12","東京都":"13","神奈川県":"14","新潟県":"15",
-  "富山県":"16","石川県":"17","福井県":"18","山梨県":"19","長野県":"20",
-  "岐阜県":"21","静岡県":"22","愛知県":"23","三重県":"24","滋賀県":"25",
-  "京都府":"26","大阪府":"27","兵庫県":"28","奈良県":"29","和歌山県":"30",
-  "鳥取県":"31","島根県":"32","岡山県":"33","広島県":"34","山口県":"35",
-  "徳島県":"36","香川県":"37","愛媛県":"38","高知県":"39","福岡県":"40",
-  "佐賀県":"41","長崎県":"42","熊本県":"43","大分県":"44","宮崎県":"45",
-  "鹿児島県":"46","沖縄県":"47"
+const officeMap = {
+  "北海道":"札幌管区気象台", "青森県":"青森地方気象台", "岩手県":"盛岡地方気象台", "宮城県":"仙台管区気象台", "秋田県":"秋田地方気象台", "山形県":"山形地方気象台", "福島県":"福島地方気象台", "茨城県":"水戸地方気象台", "栃木県":"宇都宮地方気象台", "群馬県":"前橋地方気象台", "埼玉県":"熊谷地方気象台", "千葉県":"銚子地方気象台", "東京都":"気象庁", "神奈川県":"横浜地方気象台", "新潟県":"新潟地方気象台", "富山県":"富山地方気象台", "石川県":"金沢地方気象台", "福井県":"福井地方気象台", "山梨県":"甲府地方気象台", "長野県":"長野地方気象台", "岐阜県":"岐阜地方気象台", "静岡県":"静岡地方気象台", "愛知県":"名古屋地方気象台", "三重県":"津地方気象台", "滋賀県":"彦根地方気象台", "京都府":"京都地方気象台", "大阪府":"大阪管区気象台", "兵庫県":"神戸地方気象台", "奈良県":"奈良地方気象台", "和歌山県":"和歌山地方気象台", "鳥取県":"鳥取地方気象台", "島根県":"松江地方気象台", "岡山県":"岡山地方気象台", "広島県":"広島地方気象台", "山口県":"下関地方気象台", "徳島県":"徳島地方気象台", "香川県":"高松地方気象台", "愛媛県":"松山地方気象台", "高知県":"高知地方気象台", "福岡県":"福岡管区気象台", "佐賀県":"佐賀地方気象台", "長崎県":"長崎地方気象台", "熊本県":"熊本地方気象台", "大分県":"大分地方気象台", "宮崎県":"宮崎地方気象台", "鹿児島県":"鹿児島地方気象台", "沖縄県":"沖縄気象台"
+};
+
+const r8CodeMap = {
+  "北海道":"016000", "青森県":"020000", "岩手県":"030000", "宮城県":"040000", "秋田県":"050000", "山形県":"060000", "福島県":"070000", "茨城県":"080000", "栃木県":"090000", "群馬県":"100000", "埼玉県":"110000", "千葉県":"120000", "東京都":"130000", "神奈川県":"140000", "新潟県":"150000", "富山県":"160000", "石川県":"170000", "福井県":"180000", "山梨県":"190000", "長野県":"200000", "岐阜県":"210000", "静岡県":"220000", "愛知県":"230000", "三重県":"240000", "滋賀県":"250000", "京都府":"260000", "大阪府":"270000", "兵庫県":"280000", "奈良県":"290000", "和歌山県":"300000", "鳥取県":"310000", "島根県":"320000", "岡山県":"330000", "広島県":"340000", "山口県":"350000", "徳島県":"360000", "香川県":"370000", "愛媛県":"380000", "高知県":"390000", "福岡県":"400000", "佐賀県":"410000", "長崎県":"420000", "熊本県":"430000", "大分県":"440000", "宮崎県":"450000", "鹿児島県":"460040", "沖縄県": "471000",  
+   
 };
 
 const warningCodeMap = {
-  "02":"暴風雪警報",
-  "03":"大雨警報",
-  "04":"洪水警報",
-  "05":"暴風警報",
-  "06":"大雪警報",
-  "07":"波浪警報",
-  "08":"高潮警報",
-  "10":"大雨注意報",
-  "12":"大雪注意報",
-  "13":"風雪注意報",
-  "14":"雷注意報",
-  "15":"強風注意報",
-  "16":"波浪注意報",
-  "17":"融雪注意報",
-  "18":"洪水注意報",
-  "19":"高潮注意報",
-  "20":"濃霧注意報",
-  "21":"乾燥注意報",
-  "22":"なだれ注意報",
-  "23":"低温注意報",
-  "24":"霜注意報",
-  "25":"着氷注意報",
-  "26":"着雪注意報",
+  // --- 警報（00番台） ---
+  "02":"暴風雪警報", 
+  "03":"レベル3大雨警報", 
+  "04":"レベル3土砂災害警報", 
+  "05":"暴風警報", 
+  "06":"大雪警報", 
+  "07":"波浪警報", 
+  "08":"レベル3高潮警報", 
+  "09":"レベル3土砂災害警報",
+
+
+  // --- 注意報（10〜20番台） ---
+  "10":"レベル2大雨注意報",
+  "12":"レベル2大雨注意報", 
+  "13":"風雪注意報", 
+  "14":"雷注意報", 
+  "15":"強風注意報", 
+  "16":"波浪注意報",  
+  "19":"レベル2高潮注意報", 
+  "20":"濃霧注意報", 
+  "21":"乾燥注意報", 
+  "22":"なだれ注意報", 
+  "23":"低温注意報", 
+  "24":"霜注意報", 
+  "25":"着氷注意報", 
+  "26":"着雪注意報", 
   "27":"融雪注意報",
-  "32":"暴風雪特別警報",
-  "33":"大雨特別警報",
-  "35":"暴風特別警報",
-  "36":"大雪特別警報",
-  "37":"波浪特別警報",
-  "38":"高潮特別警報"
+  "29":"レベル2土砂災害注意報", 
+
+  // --- 特別警報（30〜30番台） ---
+  "32":"暴風雪特別警報", 
+  "33":"レベル5大雨特別警報", 
+  "35":"大雪特別警報", 
+  "36":"波浪特別警報", 
+  "37":"レベル5高潮特別警報", 
+  "38":"暴風特別警報",
+
+  // --- 各種気象情報・システム連携（60・90番台） ---
+  "61":"記録的短時間大雨情報", 
+  "62":"竜巻注意情報", 
+  "63":"指定河川洪水予報", 
+  "64":"土砂災害警戒情報", 
+  "91":"危険警報"
 };
 
-// ←ここに変なコードを絶対入れないでください！(コードの途中に入れると、気象庁のサイトから正しいデータを取れなくなります)
-
-const areaNameMapByRegion = {
+const areaNameMaps = {
   souya: {
+    "012200":"宗谷地方", // 追加：地方コード
     "0121400":"稚内市",
     "0151100":"猿払村",
     "0151200":"浜頓別町",
@@ -271,9 +250,8 @@ const areaNameMapByRegion = {
   ishikari: {
     "016000":"石狩地方",
     "0111000":"札幌市",
-    "0122400":"千歳市",
     "0121700":"江別市",
-    "0122401":"千歳市",
+    "0122400":"千歳市",
     "0123100":"恵庭市",
     "0123401":"北広島市",
     "0123500":"石狩市",
@@ -1033,9 +1011,11 @@ const areaNameMapByPref = {
   "神奈川県": {
     "140010":"神奈川県東部",
     "140020":"神奈川県西部",
-    "1410000":"横浜市",
+    "1410011":"横浜市北部",
+    "1410012":"横浜市南部",
     "1413000":"川崎市",
-    "1415000":"相模原市",
+    "1415011":"相模原市東部",
+    "1415012":"相模原市西部",
     "1420100":"横須賀市",
     "1420300":"平塚市",
     "1420400":"鎌倉市",
@@ -1339,8 +1319,8 @@ const areaNameMapByPref = {
   "220040":"西部",
   "2210001":"静岡市南部",
   "2210002":"静岡市北部",
-  "2213001":"浜松市北部",
-  "2213002":"浜松市南部",
+  "2213001":"浜松市南部",
+  "2213002":"浜松市北部",
   "2220300":"沼津市",
   "2220500":"熱海市",
   "2220600":"三島市",
@@ -1390,7 +1370,8 @@ const areaNameMapByPref = {
   "2320800":"津島市",
   "2320900":"碧南市",
   "2321000":"刈谷市",
-  "2321100":"豊田市",
+  "2321101":"豊田市西部",
+  "2321102":"豊田市東部",
   "2321200":"安城市",
   "2321300":"西尾市",
   "2321400":"蒲郡市",
@@ -1434,41 +1415,6 @@ const areaNameMapByPref = {
   "2356200":"東栄町",
   "2356300":"豊根村"
 },
-
-"三重県": {
-  "240010":"三重県北中部",
-  "240020":"三重県南部",
-  "2420100":"津市",
-  "2420200":"四日市市",
-  "2420300":"伊勢市",
-  "2420400":"松阪市",
-  "2420500":"桑名市",
-  "2420700":"鈴鹿市",
-  "2420800":"名張市",
-  "2420900":"尾鷲市",
-  "2421000":"亀山市",
-  "2421100":"鳥羽市",
-  "2421200":"熊野市",
-  "2421400":"いなべ市",
-  "2421500":"志摩市",
-  "2421600":"伊賀市",
-  "2430300":"木曽岬町",
-  "2432400":"東員町",
-  "2434100":"菰野町",
-  "2434300":"朝日町",
-  "2434400":"川越町",
-  "2444100":"多気町",
-  "2444200":"明和町",
-  "2444300":"大台町",
-  "2446100":"玉城町",
-  "2447000":"度会町",
-  "2447100":"大紀町",
-  "2447200":"南伊勢町",
-  "2454300":"紀北町",
-  "2456100":"御浜町",
-  "2456200":"紀宝町"
-},
-
 "滋賀県": {
   "250010":"滋賀県北部",
   "250020":"滋賀県南部",
@@ -1747,7 +1693,7 @@ const areaNameMapByPref = {
 },
 
 "岡山県": {
-  "330010":"岡山県 جنوبی",
+  "330010":"岡山県南部",
   "330020":"岡山県北部",
   "3310000":"岡山市",
   "3320200":"倉敷市",
@@ -2228,10 +2174,13 @@ const areaNameMapByPref = {
 },
 
 "沖縄県": {
-  "471010":"沖縄本島地方",
-  "472020":"大東島地方",
-  "473030":"宮古島地方",
-  "474040":"八重山地方",
+  "471000":"沖縄本島地方",
+  "471010":"沖縄本島中南部",
+  "471020":"沖縄本島北部",
+  "471030":"久米島地方",
+  "472000":"大東島地方",
+  "473000":"宮古島地方",
+  "474000":"八重山地方",
   "4720100":"那覇市",
   "4720500":"宜野湾市",
   "4720700":"石垣市",
@@ -2276,296 +2225,346 @@ const areaNameMapByPref = {
 }
 };
 
-// =======================
-// 北海道地方ラベル
-// =======================
-const hokkaidoRegionLabelMap = {
-  souya:"宗谷地方",kamikawa:"上川地方",rumoi:"留萌地方",
-  ishikari:"石狩地方",sorachi:"空知地方",shiribeshi:"後志地方",
-  abashiri:"網走地方",kushiro:"釧路地方",nemuro:"根室地方",
-  tokachi:"十勝地方",iburi:"胆振地方",hidaka:"日高地方",
-  oshima:"渡島地方",hiyama:"檜山地方"
-};
+function toggleRegionSelect(){
 
-// =======================
-// 北海道セレクト
-// =======================
-function toggleHokkaidoRegionSelect(){
-  const pref=document.getElementById("pref").value;
-  const el=document.getElementById("hokkaidoRegion");
-  el.style.display = (pref==="北海道") ? "block" : "none";
-}
+  const pref =
+    document.getElementById("pref").value;
 
-// =======================
-// 共通
-// =======================
-function isHokkaidoArea(code){
-  return String(code).startsWith("01") && String(code).length>=7;
-}
+  const el =
+    document.getElementById("hokkaidoRegion");
 
-function getHokkaidoRegionKeyByCode(code){
-  for(const k in areaNameMapByRegion){
-    if(areaNameMapByRegion[k][code]) return k;
-  }
-  return null;
-}
+  const select =
+    document.getElementById("regionSelect");
 
-function getAreaName(code){
-  const pref=document.getElementById("pref").value;
-  const c=String(code);
+  select.innerHTML = "";
 
-  if(pref==="北海道"){
-    for(const k in areaNameMapByRegion){
-      if(areaNameMapByRegion[k][c]) return areaNameMapByRegion[k][c];
-    }
-  }else{
-    const map=areaNameMapByPref[pref]||{};
-    if(map[c]) return map[c];
+  if(!subRegionMap[pref]){
+
+    el.style.display = "none";
+    return;
+
   }
 
-  return null; // ←見つからない場合は非表示
-}
-function getOffice(pref){
-  return officeMap[pref]||"気象台";
+  el.style.display = "block";
+
+  const defaultOpt =
+    document.createElement("option");
+
+  defaultOpt.value = "";
+  defaultOpt.textContent =
+    "地方を選択（全域）";
+
+  select.appendChild(defaultOpt);
+
+  subRegionMap[pref]
+  .forEach(item => {
+
+    const option =
+      document.createElement("option");
+
+    option.value = item[0];
+    option.textContent = item[1];
+
+    select.appendChild(option);
+
+  });
+
 }
 
-function formatTime(t){
-  if(!t) return "時刻不明";
-  const d=new Date(t);
-  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}時${String(d.getMinutes()).padStart(2,"0")}分`;
-}
+document
+  .getElementById("pref")
+  .addEventListener(
+    "change",
+    toggleRegionSelect
+  );
 
-function getWarningIcon(code,status){
-  const c=String(code).padStart(2,"0");
-  if(status==="解除") return "⬜";
-  if(c==="33") return "⬛";
-  if(["32","35","36","37"].includes(c)) return "🟪";
-  if(["03","04","05","06","07","08"].includes(c)) return "🟥";
+toggleRegionSelect();
+
+// =======================
+// 補助関数
+// =======================
+function getWarningIcon(code, status){
+  if(status === "解除"){ return "⬜"; }
+  const c = String(code).padStart(2,"0");
+  if(c === "91"){ return "🟧"; }
+  if(c === "33"){ return "⬛"; }
+  if(["32","35","36","37","38","64"].includes(c)){ return "🟪"; }
+  if(["03","04","05","06","07","08",].includes(c)){ return "🟥"; }
   return "🟨";
 }
 
 function getWarningName(code){
-  return warningCodeMap[String(code).padStart(2,"0")]||"不明";
+  const c = String(code).padStart(2,"0");
+  return warningCodeMap[c] || ("コード" + c);
 }
 
-function makeLabel(code,status){
-  const name = getWarningName(code);
-  if(name==="不明") return null; // ←これ追加
-  return getWarningIcon(code,status)+name;
+function getAreaName(code){
+  const pref = document.getElementById("pref").value;
+  const c = String(code);
+
+  if(pref === "北海道"){
+    for(const regionKey in areaNameMaps){
+      if(areaNameMaps[regionKey][c]){ return areaNameMaps[regionKey][c]; }
+    }
+  } else {
+    const map = areaNameMapByPref[pref] || {};
+    if(map[c]){ return map[c]; }
+  }
+  return "区域コード " + c;
 }
-let mode = "normal"; 
-// normal = 市区町村
-// grouped = 下にまとめ付き
-// only = まとめだけ
+
+function formatTime(isoText){
+
+  if(!isoText){
+    return "時刻不明";
+  }
+
+  const d = new Date(isoText);
+
+  return d.getFullYear() + "年" +
+    (d.getMonth() + 1) + "月" +
+    d.getDate() + "日 " +
+    d.getHours() + "時" +
+    String(d.getMinutes()).padStart(2,"0") +
+    "分";
+
+}
+
+function getOffice(pref){
+  return officeMap[pref] || "気象台";
+}
+
 // =======================
-// メイン
+// メイン処理（API取得・成形）
 // =======================
-async function createText(){
-  const pref=document.getElementById("pref").value;
-  const prefCode=prefCodeMap[pref];
-  const resultEl=document.getElementById("result");
+async function createText(mode="normal"){
+  console.log("createText開始");
+  const pref = document.getElementById("pref").value;
+  const resultEl = document.getElementById("result");
+  const regionSelect = document.getElementById("regionSelect");
 
   try{
-    resultEl.innerText="読み込み中...";
+    resultEl.innerText = "読み込み中...";
 
-    const res=await fetch("https://www.jma.go.jp/bosai/warning/data/warning/map.json");
-    const data=await res.json();
+  // 地方選択対応
+let r8Code = r8CodeMap[pref];
 
-    let target=data.find(item=>
-      item.areaTypes?.some(type=>
-        type.areas?.some(a=>
-          String(a.code).startsWith(prefCode)
-        )
-      )
-    );
+if(
+  subRegionMap[pref] &&
+  regionSelect &&
+  regionSelect.value
+){
+  r8Code = regionSelect.value;
+}
 
-    if(!target){
-      resultEl.innerText="データなし";
-      return "データなし";
+const res = await fetch(
+  "https://www.jma.go.jp/bosai/warning/data/r8/" +
+  r8Code +
+  ".json?t=" +
+  Date.now()
+);
+
+console.log(
+  "取得URL",
+  "https://www.jma.go.jp/bosai/warning/data/r8/" +
+  r8Code +
+  ".json"
+);
+
+console.log(res);
+
+const json = await res.json();
+
+console.log(json);
+
+console.log(json);
+
+   let targets = Array.isArray(json)
+  ? json
+  : [json];
+
+ const validTargets =
+  targets.filter(
+    t => t.warning
+  );
+
+if(validTargets.length === 0){
+
+  const emptyText =
+    "【" + pref + "】\n\n現在、警報・注意報は発表されていません";
+
+  resultEl.innerText =
+    emptyText;
+
+  return emptyText;
+
+}
+
+    let cityLines = [];
+    let warningGroups = {};
+
+    
+
+ const processArea = (area) => {
+
+  const areaName =
+    getAreaName(area.areaCode);
+
+  let labels = [];
+
+  (area.kinds || []).forEach(w => {
+
+    if(
+      w.code === undefined ||
+      w.code === null ||
+      w.code === ""
+    ){
+      return;
     }
 
-    let warningMap = {}; // ←まとめ用
-    let cityLines=[];
+    console.log(
+      areaName,
+      w.code,
+      w.status
+    );
 
-    target.areaTypes.forEach(type=>{
-      type.areas?.forEach(area=>{
+    const warningName =
+      getWarningName(w.code);
 
-        const codeStr = String(area.code);
-        if(!codeStr.startsWith(prefCode)) return;
+    if(
+      warningName.includes("undefined")
+    ){
+      return;
+    }
 
-        if(!area.warnings || area.warnings.length===0) return;
+    const label =
+      getWarningIcon(
+        w.code,
+        w.status
+      ) +
+      warningName;
 
-        let labels=[];
+    if(!labels.includes(label)){
+      labels.push(label);
+    }
 
-        area.warnings.forEach(w=>{
-          const name = getAreaName(area.code);
-          if(!name) return;
+    if(!warningGroups[label]){
+      warningGroups[label] = [];
+    }
 
-          const warningName = getWarningName(w.code);
-          if(warningName==="不明") return;
+    if(
+      !warningGroups[label]
+        .includes(areaName)
+    ){
+      warningGroups[label]
+        .push(areaName);
+    }
 
-          const label = getWarningIcon(w.code,w.status)+warningName;
+  });
 
-          // 重複防止
-          if(!labels.includes(label)){
-            labels.push(label);
-          }
+  if(labels.length > 0){
 
-          // まとめ
-          if(!warningMap[label]) warningMap[label]=[];
-          if(!warningMap[label].includes(name)){
-            warningMap[label].push(name);
-          }
-        });
+    cityLines.push(
+      areaName +
+      "\n　" +
+      labels.join("\n　")
+    );
 
-        if(labels.length===0) return;
+  }
 
-        const line = getAreaName(area.code)+"　"+labels.join("　");
-        cityLines.push(line);
+};
 
-      });
-    });
+validTargets.forEach(target => {
 
-    let text=`【${pref}】\n\n`;
-    text+=formatTime(target.reportDatetime)+"発表\n";
-    text+=getOffice(pref)+"発表\n";
-    text+="━━━━━━━━━━━━\n";
+  const class10 =
+    target.warning?.class10Items || [];
+
+  const class15 =
+    target.warning?.class15Items || [];
+
+  const class20 =
+    target.warning?.class20Items || [];
+
+  class10.forEach(processArea);
+  class15.forEach(processArea);
+  class20.forEach(processArea);
+
+});
+
+
+
+
 
     // =======================
-// 表示切り替え
-// =======================
+    // 出力テキスト生成
+    // =======================
+    let text = "【" + pref + "】\n\n";
+  const latestTime =
+  validTargets
+    .map(t => t.reportDatetime)
+    .sort()
+    .reverse()[0];
 
-// 通常 or grouped → 市区町村
-if(mode==="normal" || mode==="grouped"){
-  if(cityLines.length===0){
-    text+="現在、警報・注意報は発表されていません\n";
-  }else{
-    text+=cityLines.join("\n")+"\n";
-  }
-}
+text +=
+  formatTime(latestTime)
+  + "発表\n";
+    text += getOffice(pref) + "発表\n";
+    text += "━━━━━━━━━━━━\n";
 
-// grouped or only → まとめ
-if(mode==="grouped" || mode==="only"){
-  text+="━━━━━━━━━━━━\n";
+    if(mode === "normal"){
+      if(cityLines.length === 0){
+        text += "現在、警報・注意報は発表されていません";
+      } else {
+        text += cityLines.join("\n\n");
+      }
+    }
+    else if(mode === "summary"){
+      if(cityLines.length === 0){
+        text += "現在、警報・注意報は発表されていません";
+      } else {
+        text += cityLines.join("\n\n");
+        text += "\n━━━━━━━━━━━━\n";
+        for(const label in warningGroups){
+          text += "【" + label + "】\n" + [...new Set(warningGroups[label])].join("、") + "\n";
+        }
+      }
+    }
+    else if(mode === "warning"){
+      if(Object.keys(warningGroups).length === 0){
+        text += "現在、警報・注意報は発表されていません";
+      } else {
+        for(const label in warningGroups){
+          text += "【" + label + "】\n" + [...new Set(warningGroups[label])].join("、") + "\n\n";
+        }
+      }
+    }
 
-  for(const w in warningMap){
-    text+=`【${w}】\n`;
-    text+=warningMap[w].join("、")+"\n";
-  }
-}
-
-    resultEl.innerText=text;
+    resultEl.innerText = text;
     return text;
 
   }catch(e){
-    resultEl.innerText="エラー："+e.message;
-    return "エラー";
+    console.error(e);
+    resultEl.innerText = "データ取得エラー\n\nmessage: " + e.message + "\n\nstack:\n" + e.stack;
+    return null;
   }
 }
 
-// =======================
-// コピー
-// =======================
-async function createAndCopy(){
-  const text = await createText(); // ←これ重要
-  async function createAndCopy(){
-  const text = await createText();
-  await navigator.clipboard.writeText(text);
-  async function createAndCopyGrouped(){
-  const text = await createTextGrouped(); // ←別関数
-  await navigator.clipboard.writeText(text);
-  async function createAndCopyGrouped(){
-  const text = await createTextGrouped(); // ←別関数
-  await navigator.clipboard.writeText(text);
-}
-createTextGrouped()
-createTextByWarning()
-}
-}
 
+async function createAndCopy(mode){
   try{
+    const text = await createText(mode);
+    if(!text){ return; }
     await navigator.clipboard.writeText(text);
     alert("コピーしました");
   }catch(e){
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
-
-    alert("コピーしました（代替）");
-  }
-}
- // =======================
-// 通常コピー
-// =======================
-// =======================
-// 通常コピー
-// =======================
-// =======================
-// コピー（通常）
-// =======================
-async function createAndCopy(){
-  mode = "normal";
-  const text = await createText();
-
-  try{
-    await navigator.clipboard.writeText(text);
-    alert("コピーしました");
-  }catch(e){
-    fallbackCopy(text);
+    console.error(e);
+    alert("コピー失敗");
   }
 }
 
-// =======================
-// コピー（まとめ付き）
-// =======================
-async function createAndCopyGrouped(){
-  mode = "grouped";
-  const text = await createText();
-
-  try{
-    await navigator.clipboard.writeText(text);
-    alert("コピーしました");
-  }catch(e){
-    fallbackCopy(text);
-  }
-}
-
-// =======================
-// コピー（まとめだけ）
-// =======================
-async function createAndCopyByWarning(){
-  mode = "only";
-  const text = await createText();
-
-  try{
-    await navigator.clipboard.writeText(text);
-    alert("コピーしました");
-  }catch(e){
-    fallbackCopy(text);
-  }
-}
-
-// =======================
-// 代替コピー
-// =======================
-function fallbackCopy(text){
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand("copy");
-  document.body.removeChild(textarea);
-  alert("コピーしました（代替）");
-}
-
-// =======================
-// イベント
-// =======================
-document.getElementById("pref").onchange=toggleHokkaidoRegionSelect;
-toggleHokkaidoRegionSelect();
+document.getElementById("normalBtn").addEventListener("click", () => createAndCopy("normal"));
+document.getElementById("summaryBtn").addEventListener("click", () => createAndCopy("summary"));
+document.getElementById("warningBtn").addEventListener("click", () => createAndCopy("warning"));
 </script>
-
+</body>
 </html>
