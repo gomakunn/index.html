@@ -2405,7 +2405,6 @@ function toggleRegionSelect(){
     select.appendChild(option);
 
   });
-
 }
 
 document
@@ -2525,6 +2524,19 @@ console.log(json);
     t => t.warning
   );
 
+  const latestTarget =
+  validTargets
+    .sort(
+      (a,b) =>
+        new Date(b.reportDatetime)
+        - new Date(a.reportDatetime)
+    )[0];
+    console.log(
+  "最新発表",
+  latestTarget.reportDatetime,
+  latestTarget.headlineText
+);
+
 if(validTargets.length === 0){
 
   const emptyText =
@@ -2539,10 +2551,10 @@ if(validTargets.length === 0){
 
     let cityLines = [];
     let warningGroups = {};
-
     
+    const activeWarnings = {};
 
- const processArea = (area) => {
+const processArea = (area) => {
 
   const areaName =
     getAreaName(area.areaCode);
@@ -2552,50 +2564,12 @@ if(validTargets.length === 0){
   (area.kinds || []).forEach(w => {
 
     if(
-      w.code === undefined ||
-      w.code === null ||
-      w.code === ""
+      w.status === "解除"
     ){
       return;
     }
 
-    console.log(
-      areaName,
-      w.code,
-      w.status
-    );
-
-    const warningName =
-      getWarningName(w.code);
-
-    if(
-      warningName.includes("undefined")
-    ){
-      return;
-    }
-
-    const label =
-      getWarningIcon(
-        w.code,
-        w.status
-      ) +
-      warningName;
-
-    if(!labels.includes(label)){
-      labels.push(label);
-    }
-
-    if(!warningGroups[label]){
-      warningGroups[label] = [];
-    }
-
-    if(
-      !warningGroups[label]
-        .includes(areaName)
-    ){
-      warningGroups[label]
-        .push(areaName);
-    }
+    
 
   });
 
@@ -2622,13 +2596,81 @@ validTargets.forEach(target => {
   const class20 =
     target.warning?.class20Items || [];
 
-  class10.forEach(processArea);
-  class15.forEach(processArea);
-  class20.forEach(processArea);
+  [...class10, ...class15, ...class20]
+    .forEach(area => {
+
+      (area.kinds || [])
+        .forEach(w => {
+
+          const key =
+            area.areaCode + "_" + w.code;
+
+          if(w.status === "解除"){
+
+            delete activeWarnings[key];
+
+          }else{
+
+            activeWarnings[key] = {
+              areaCode: area.areaCode,
+              code: w.code,
+              status: w.status
+            };
+
+          }
+
+        });
+
+    });
 
 });
 
+warningGroups = {};
 
+Object.values(activeWarnings).forEach(w => {
+
+  if(
+    w.code === undefined ||
+    w.code === null ||
+    w.code === ""
+  ){
+    return;
+  }
+
+  const areaName =
+    getAreaName(w.areaCode);
+
+  const warningName =
+    getWarningName(w.code);
+
+  const label =
+    getWarningIcon(
+      w.code,
+      "発表"
+    ) + warningName;
+
+  if(!warningGroups[label]){
+    warningGroups[label] = [];
+  }
+
+  if(
+    !warningGroups[label]
+      .includes(areaName)
+  ){
+    warningGroups[label]
+      .push(areaName);
+  }
+
+});
+
+console.log(
+  "warningGroups",
+  warningGroups
+);
+
+console.log(
+  Object.keys(warningGroups).length
+);
 
 
 
@@ -2637,16 +2679,24 @@ validTargets.forEach(target => {
     // =======================
     let text = "【" + pref + "】\n\n";
   const latestTime =
-  validTargets
-    .map(t => t.reportDatetime)
-    .sort()
-    .reverse()[0];
+  latestTarget.reportDatetime;
 
 text +=
   formatTime(latestTime)
   + "発表\n";
     text += getOffice(pref) + "発表\n";
     text += "━━━━━━━━━━━━\n";
+
+    cityLines = [];
+
+for(const label in warningGroups){
+
+  cityLines.push(
+    "【" + label + "】\n" +
+    warningGroups[label].join("、")
+  );
+
+}
 
     if(mode === "normal"){
       if(cityLines.length === 0){
